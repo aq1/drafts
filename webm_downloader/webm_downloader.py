@@ -11,14 +11,36 @@ import multiprocessing
 from dot_dictionary import DotDictionary
 
 
-URL = 'https://2ch.hk/{}/catalog.json'
+CATALOG_URL = 'https://2ch.hk/{}/catalog.json'
+THREAD_URL = 'https://2ch.hk/{}/res/{}.json'
 QUERY = r'(webm | цуиь)'
 
 
-class Catalog(object):
+class AbstractDownloader(object):
+
+    def _download(self):
+        raw_data = urllib.request.urlopen(self._get_download_url())
+        json_data = raw_data.read().decode()
+        self.data = DotDictionary(json.loads(json_data))
+        self.pickle()
+
+    def _unpickle(self):
+        try:
+            with open(self._get_filename(), 'rb') as f:
+                self.data = DotDictionary(pickle.load(f))
+        except (FileNotFoundError, pickle.UnpicklingError) as e:
+            print(e)
+
+    def pickle(self):
+        with open(self._get_filename(), 'wb') as f:
+            pickle.dump(self.data, f)
+
+
+class Catalog(AbstractDownloader):
 
     def __init__(self, board='b', local=False, get_data_on_init=True):
         self.board = board
+        self.threads = []
         self.data = None
 
         if local:
@@ -32,21 +54,8 @@ class Catalog(object):
     def _get_filename(self):
         return 'catalog_{}.pickle'.format(self.board)
 
-    def _unpickle(self):
-        try:
-            with open(self._get_filename(), 'rb') as f:
-                self.data = DotDictionary(pickle.load(f))
-        except (FileNotFoundError, pickle.UnpicklingError):
-            return
-
-    def _download(self):
-        raw_data = urllib.request.urlopen(URL.format(self.board))
-        self.json = raw_data.read().decode()
-        self.data = DotDictionary(json.loads(self.json))
-
-    def pickle(self):
-        with open(self._get_filename(), 'wb') as f:
-            pickle.dump(self.data, f)
+    def _get_download_url(self):
+        return CATALOG_URL.format(self.board)
 
     def search_threads(self, query=QUERY):
         if not self.data:
@@ -55,6 +64,43 @@ class Catalog(object):
         query = re.compile(query, flags=re.IGNORECASE | re.UNICODE)
         for thread in self.data.threads:
             if query.search(thread.comment):
-                print(thread.comment.decode('utf8'))
-                # print(thread.keys())
-                # print(thread.num)
+                thread = Thread(number=thread.num, local=True)
+                self.threads.append(thread)
+                print(thread)
+                # print(thread.data)
+
+    def __repr__(self):
+        return 'Catalog /{}/'.format(self.board)
+
+
+class Thread(AbstractDownloader):
+
+    def __init__(self, board='b', number=None, local=False):
+        self.data = None
+        self.board = board
+        self.number = number
+
+        if local:
+            self.get_thread = self._unpickle
+        else:
+            self.get_thread = self._download
+
+        if number:
+            self.get_thread()
+
+    def _get_filename(self):
+        return 'thread_{}_{}.pickle'.format(self.board, self.number)
+
+    def _get_download_url(self):
+        return THREAD_URL.format(self.board, self.number)
+
+    def __repr__(self):
+        return 'Thread {}/{}'.format(self.board, self.number)
+
+
+# catalog = Catalog(local=True)
+# catalog.search_threads()
+
+thread = Thread(number=98698294, local=True)
+# pprint.pprint(thread.data.threads[0].posts[3].files[0].path)
+print(thread)
