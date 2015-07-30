@@ -1,0 +1,20 @@
+{
+    "name": "Pin image downloader",
+    "description": "Download images with just one click!",
+    "version": "0.1",
+    "permissions": [
+        "tabs"
+    ],
+
+    "content_scripts": [{
+        "matches": [
+            "http://pinterest.com/",
+            "https://pinterest.com/",
+            "http://www.pinterest.com/",
+            "https://www.pinterest.com/"
+        ],
+        "js": ["main.js"],
+        "run_at": "document_end"
+    }],
+    "manifest_version": 2
+}
