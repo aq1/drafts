@@ -3,18 +3,22 @@
     "description": "Download images with just one click!",
     "version": "0.1",
     "permissions": [
-        "tabs"
+        "tabs",
+        "downloads",
+        // "background",
+        "https://www.pinterest.com/*"
     ],
 
     "content_scripts": [{
         "matches": [
-            "http://pinterest.com/",
-            "https://pinterest.com/",
-            "http://www.pinterest.com/",
-            "https://www.pinterest.com/"
+            "https://www.pinterest.com/",
+            "https://www.pinterest.com/search/*"
         ],
         "js": ["main.js"],
         "run_at": "document_end"
     }],
+    "background": {
+        "scripts": ["downloader.js"]
+    },
     "manifest_version": 2
 }
