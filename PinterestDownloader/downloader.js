@@ -1,6 +1,7 @@
 chrome.runtime.onMessage.addListener(
     function(message, sender, sendResponse) {
         downloadImage(message.imageSrc, sendResponse);
+        return true;
     });
 
 
@@ -9,6 +10,6 @@ var downloadImage = function(url, callback) {
         url: url
     }, function(downloadId) {
         callback(true);
-        console.log('Done', downloadId);
+        // console.log('done ' + downloadId);
     });
 };

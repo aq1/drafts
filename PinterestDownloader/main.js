@@ -77,10 +77,10 @@ var getPinImage = function(button, data) {
 
     var imageSrc = page.getElementsByClassName('pinImage')[0].src;
 
-    console.log(button + ' ' + typeof(button));
     chrome.runtime.sendMessage({
         imageSrc: imageSrc
     }, function(response) {
+        console.log('response');
         if (response === true) {
             button.style.backgroundColor = "rgba(20, 150, 113, 0.8)";
         }
