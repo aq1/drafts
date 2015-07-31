@@ -1,5 +1,5 @@
 var setStyle = function() {
-    var css = 'button{border:1px solid black;background-color:rgba(83,83,83,0.6);color:white;height:25px!important;bottom:25px!important;position:relative!important;padding:5px;z-index:1000;font-weight:bolder;}';
+    var css = 'button{border:0px solid black;background-color:rgba(83,83,83,0.6);color:white;height:25px!important;bottom:25px!important;position:relative!important;padding:5px;z-index:1000;font-weight:bolder;}';
     css += 'button:hover {background-color: rgba(83,83,83,1);}'
 
     style = document.createElement('style');
@@ -31,7 +31,8 @@ var placeButtons = function() {
                     button.onclick = (function() {
                         var scopePinUrl = pinUrl;
                         return function() {
-                            downloadImage(scopePinUrl);
+                            this.style.backgroundColor = "rgba(0, 164, 185, 0.8)";
+                            downloadImage(this, scopePinUrl);
                         }
                     })();
                 }
@@ -46,9 +47,8 @@ window.pinIndex = 0;
 setStyle();
 
 
-
-var downloadImage = function(pinUrl) {
-    console.log('Getting ' + pinUrl);
+var downloadImage = function(button, pinUrl) {
+    // console.log('Getting ' + pinUrl);
 
     var xhr = new XMLHttpRequest();
     xhr.open("GET", pinUrl, true);
@@ -60,7 +60,7 @@ var downloadImage = function(pinUrl) {
         }
 
         if (xhr.status === 200) {
-            getPinImage(xhr.responseText);
+            getPinImage(button, xhr.responseText);
         }
     }
 
@@ -72,23 +72,19 @@ setInterval(function() {
 }, 500)
 
 
-var getPinImage = function(data) {
+var getPinImage = function(button, data) {
     page = convertStringToDom(data);
 
     var imageSrc = page.getElementsByClassName('pinImage')[0].src;
 
-    console.log(chrome);
-    console.log(chrome.runtime);
+    console.log(button + ' ' + typeof(button));
     chrome.runtime.sendMessage({
         imageSrc: imageSrc
     }, function(response) {
-        console.log(response.farewell);
+        if (response === true) {
+            button.style.backgroundColor = "rgba(20, 150, 113, 0.8)";
+        }
     });
-// chrome.runtime.onMessage.addListener(function callback)
-    // chrome.downloads.download({url: imageSrc}, function(donwloadId) {
-    //     console.log('DOWNLOADED! ' + donwloadId);
-    // });
-    console.log('Got ' + imageSrc);
 };
 
 
