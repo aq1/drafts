@@ -18,7 +18,7 @@ var placeButtons = function() {
     for (window.pinIndex; window.pinIndex < pinDivs.length; window.pinIndex++) {
 
         var button = document.createElement('button');
-        button.innerHTML = 'Get Image'
+        button.innerHTML = 'Get Image';
 
         if (pinDivs[window.pinIndex].appendChild) {
             pinDivs[window.pinIndex].appendChild(button);
@@ -63,7 +63,6 @@ var downloadImage = function(button, pinUrl) {
             getPinImage(button, xhr.responseText);
         }
     }
-
 };
 
 
@@ -80,7 +79,7 @@ var getPinImage = function(button, data) {
     chrome.runtime.sendMessage({
         imageSrc: imageSrc
     }, function(response) {
-        console.log('response');
+        // console.log('response');
         if (response === true) {
             button.style.backgroundColor = "rgba(20, 150, 113, 0.8)";
         }

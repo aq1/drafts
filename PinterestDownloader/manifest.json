@@ -14,9 +14,17 @@
             "https://www.pinterest.com/",
             "https://www.pinterest.com/search/*"
         ],
-        "js": ["main.js"],
+        "js": ["pins.js"],
+        "run_at": "document_end"
+    }, {
+        "matches": [
+            "https://www.pinterest.com/pin/*"
+        ],
+        "js": ["pin_detail.js"],
         "run_at": "document_end"
     }],
+
+
     "background": {
         "scripts": ["downloader.js"]
     },
