@@ -8,11 +8,11 @@ import pickle
 import multiprocessing
 
 
-from dot_dictionary import DotDictionary
+# from dot_dictionary import DotDictionary
 
 
-CATALOG_URL = 'https://2ch.hk/{}/catalog.json'
-THREAD_URL = 'https://2ch.hk/{}/res/{}.json'
+CATALOG_URL = 'https://2ch.pm/{}/catalog.json'
+THREAD_URL = 'https://2ch.pm/{}/res/{}.json'
 QUERY = r'(webm | цуиь)'
 
 
@@ -21,13 +21,13 @@ class AbstractDownloader(object):
     def _download(self):
         raw_data = urllib.request.urlopen(self._get_download_url())
         json_data = raw_data.read().decode()
-        self.data = DotDictionary(json.loads(json_data))
+        self.data = json.loads(json_data)
         self.pickle()
 
     def _unpickle(self):
         try:
             with open(self._get_filename(), 'rb') as f:
-                self.data = DotDictionary(pickle.load(f))
+                self.data = pickle.load(f)
         except (FileNotFoundError, pickle.UnpicklingError) as e:
             print(e)
 
