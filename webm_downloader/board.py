@@ -62,8 +62,8 @@ class Catalog(AbstractDownloader):
             return None
 
         query = re.compile(query, flags=re.IGNORECASE | re.UNICODE)
-        for thread in self.data.threads:
-            if query.search(thread.comment):
+        for thread in self.data['threads']:
+            if query.search(thread['comment']):
                 thread = Thread(number=thread.num, local=False)
                 self.threads.append(thread)
                 # print(thread)
