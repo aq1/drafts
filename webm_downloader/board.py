@@ -61,8 +61,10 @@ class Catalog(AbstractDownloader):
         if not self.data:
             return None
 
-        query = re.compile(query, flags=re.IGNORECASE | re.UNICODE)
+        query = re.compile(query, flags=re.IGNORECASE)
         for thread in self.data['threads']:
+            if thread['comment'].find('WebM') != -1:
+                print(thread['num'])
             if query.search(thread['comment']):
                 thread = Thread(number=thread.num, local=False)
                 self.threads.append(thread)
@@ -99,9 +101,25 @@ class Thread(AbstractDownloader):
         return 'Thread {}/{}'.format(self.board, self.number)
 
 
-catalog = Catalog(local=False)
-catalog.search_threads()
+# catalog = Catalog(local=False)
+# catalog.search_threads()
+t = Thread(number='98987889', local=True)
+a = []
+for post in t.data['threads'][0]['posts']:
+    try:
+        files = post['files']
+    except KeyError:
+        continue
 
+    for webm in files:
+        if webm['type'] != 6:
+            print(webm['path'], 'not webm')
+            continue
+
+        url = 'http://2ch.pm/b/' + webm['path']
+        a.append(url)
+
+print(a)
 
 # link = 'http://2ch.pm/mov/src/612287/14382631576770.webm'
 # u = urllib.request.urlopen(link)
