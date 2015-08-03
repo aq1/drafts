@@ -64,9 +64,9 @@ class Catalog(AbstractDownloader):
         query = re.compile(query, flags=re.IGNORECASE | re.UNICODE)
         for thread in self.data.threads:
             if query.search(thread.comment):
-                thread = Thread(number=thread.num, local=True)
+                thread = Thread(number=thread.num, local=False)
                 self.threads.append(thread)
-                print(thread)
+                # print(thread)
                 # print(thread.data)
 
     def __repr__(self):
@@ -76,9 +76,10 @@ class Catalog(AbstractDownloader):
 class Thread(AbstractDownloader):
 
     def __init__(self, board='b', number=None, local=False):
-        self.data = None
         self.board = board
         self.number = number
+        self.data = None
+        self.webms = []
 
         if local:
             self.get_thread = self._unpickle
@@ -98,9 +99,12 @@ class Thread(AbstractDownloader):
         return 'Thread {}/{}'.format(self.board, self.number)
 
 
-# catalog = Catalog(local=True)
-# catalog.search_threads()
+catalog = Catalog(local=False)
+catalog.search_threads()
 
-thread = Thread(number=98698294, local=True)
-# pprint.pprint(thread.data.threads[0].posts[3].files[0].path)
-print(thread)
+
+# link = 'http://2ch.pm/mov/src/612287/14382631576770.webm'
+# u = urllib.request.urlopen(link)
+# f = open('out.webm', 'wb')
+# f.write(u.read())
+# f.close()
