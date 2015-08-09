@@ -1,23 +1,32 @@
 import threading
+import multiprocessing
+import random
 import time
+import os
 
-# Define a function for the thread
+cc = time.time()
 
 
-def print_time(threadName, delay):
-    print(threadName)
+def write(name):
+    print(os.getpid(), os.getppid())
+    c = time.time()
+    a = ''.join([chr(random.randint(0, 100)) for _ in range(1000000)])
+    a = a.encode()
+    with open("%s.txt" % name, 'wb') as ff:
+        ff.write(a)
+        print(name, 'done')
+    print(time.time() - c)
 
-    with open(threadName + '.txt', 'w') as f:
-        f.write(threadName)
 
-# Create two threads as follows
-try:
-    t = threading.Thread(target=print_time, args=('Thread_1', 0))
-    t1 = threading.Thread(target=print_time, args=('Thread_2', 5))
-    t.run()
-    t1.run()
-except BaseException as e:
-    print("Error: %s" % e)
+for x in range(3):
+    t = threading.Thread(target=write, args=(x,))
+    t.daemon = True
+    t.start()
 
-# while 1:
-#     pass
+
+# if __name__ == '__main__':
+#     with multiprocessing.Pool(5) as p:
+        # p.map(write, [1, 2, 3])
+    # print('total', time.time() - cc)
+
+print('total', time.time() - cc)

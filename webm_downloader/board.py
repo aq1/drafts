@@ -1,25 +1,34 @@
 # -*- coding: utf8 -*-
 
-import urllib.request
+try:
+    import urllib.request as request
+except ImportError:
+    import urllib2 as request
+
 import re
 import json
 import pprint
 import pickle
 import multiprocessing
 
+import scraper_threads as scraper
 
-# from dot_dictionary import DotDictionary
+import sys
 
+reload(sys)
+sys.setdefaultencoding('utf8')
 
-CATALOG_URL = 'https://2ch.pm/{}/catalog.json'
-THREAD_URL = 'https://2ch.pm/{}/res/{}.json'
-QUERY = r'(webm | цуиь)'
+BOARD_URL = 'https://2ch.pm/'
+CATALOG_URL = BOARD_URL + '{}/catalog.json'
+THREAD_URL = BOARD_URL + '{}/res/{}.json'
+QUERY = r'(webm | цуиь | шebm)'
+WEBM = 6
 
 
 class AbstractDownloader(object):
 
     def _download(self):
-        raw_data = urllib.request.urlopen(self._get_download_url())
+        raw_data = request.urlopen(self._get_download_url())
         json_data = raw_data.read().decode()
         self.data = json.loads(json_data)
         self.pickle()
@@ -61,15 +70,16 @@ class Catalog(AbstractDownloader):
         if not self.data:
             return None
 
-        query = re.compile(query, flags=re.IGNORECASE)
+        query = re.compile(query, flags=re.IGNORECASE | re.UNICODE)
         for thread in self.data['threads']:
-            if thread['comment'].find('WebM') != -1:
-                print(thread['num'])
             if query.search(thread['comment']):
-                thread = Thread(number=thread.num, local=False)
+                thread = Thread(number=thread['num'], local=False)
                 self.threads.append(thread)
-                # print(thread)
-                # print(thread.data)
+
+    def start_downloads(self):
+        for thread in self.threads:
+            thread.find_webms()
+            thread.start_download()
 
     def __repr__(self):
         return 'Catalog /{}/'.format(self.board)
@@ -78,9 +88,9 @@ class Catalog(AbstractDownloader):
 class Thread(AbstractDownloader):
 
     def __init__(self, board='b', number=None, local=False):
-        self.board = board
         self.number = number
-        self.data = None
+        self.board = board
+        self.data = {}
         self.webms = []
 
         if local:
@@ -97,32 +107,27 @@ class Thread(AbstractDownloader):
     def _get_download_url(self):
         return THREAD_URL.format(self.board, self.number)
 
+    def start_download(self):
+        multiprocessing.Process(
+            target=scraper.main, args=(self.webms,)).start()
+
+    def find_webms(self):
+        for post in self.data['threads'][0]['posts']:
+            try:
+                files = post['files']
+            except KeyError:
+                continue
+
+            for f in files:
+                if f['type'] == WEBM:
+                    fullpath = BOARD_URL + self.board + '/' + f['path']
+                    self.webms.append((fullpath, f['md5']))
+
     def __repr__(self):
         return 'Thread {}/{}'.format(self.board, self.number)
 
 
-# catalog = Catalog(local=False)
-# catalog.search_threads()
-t = Thread(number='98987889', local=True)
-a = []
-for post in t.data['threads'][0]['posts']:
-    try:
-        files = post['files']
-    except KeyError:
-        continue
-
-    for webm in files:
-        if webm['type'] != 6:
-            print(webm['path'], 'not webm')
-            continue
-
-        url = 'http://2ch.pm/b/' + webm['path']
-        a.append(url)
-
-print(a)
-
-# link = 'http://2ch.pm/mov/src/612287/14382631576770.webm'
-# u = urllib.request.urlopen(link)
-# f = open('out.webm', 'wb')
-# f.write(u.read())
-# f.close()
+if __name__ == '__main__':
+    catalog = Catalog(local=False)
+    catalog.search_threads()
+    catalog.start_downloads()
