@@ -55,3 +55,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# DataBase
+*.sqlite3
+
+# Webm
+*.webm
