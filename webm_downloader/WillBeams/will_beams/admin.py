@@ -4,7 +4,7 @@ from will_beams.models import Webm, Tag, WebmTag
 
 
 class WebmAdmin(admin.ModelAdmin):
-    fields = ['video', 'rating', 'is_safe_for_work']
+    fields = ['video', 'rating', 'nsfw']
     readonly = ['md5']
     list_display = ['video', 'rating', 'md5', 'is_safe_for_work']
 
