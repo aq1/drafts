@@ -6,7 +6,7 @@ from django.db.models import F
 class Webm(models.Model):
     video = models.FileField(upload_to='webm/%Y/%m/%d')
     rating = models.IntegerField(default=0)
-    md5 = models.CharField(db_index=True, unique=True, max_length=16, editable=False)
+    md5 = models.CharField(unique=True, max_length=16, editable=False)
     nsfw = models.BooleanField(default=False)
 
     @classmethod
