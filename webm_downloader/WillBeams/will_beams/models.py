@@ -4,7 +4,8 @@ from django.db.models import F
 
 
 class Webm(models.Model):
-    video = models.FileField(upload_to='webm/%Y/%m/%d')
+    video = models.FileField(upload_to='webm/%Y/%m/%d', blank=True)
+    thumbnail = models.ImageField(upload_to='thumbnail/%Y/%m/%d')
     rating = models.IntegerField(default=0)
     md5 = models.CharField(unique=True, max_length=16, editable=False)
     nsfw = models.BooleanField(default=False)
@@ -28,6 +29,15 @@ class Webm(models.Model):
 
     is_safe_for_work.boolean = True
     is_safe_for_work.short_description = 'Safe for work?'
+
+    def thumbnail_img(self):
+        html = '<img style="max-width:100%%; \
+                max-height:100%%; width:200px;" \
+                src="%s">'
+        print(html)
+        return html % self.thumbnail.url
+
+    thumbnail_img.allow_tags = True
 
     def __unicode__(self):
         return self.video.url.split('/')[-1]

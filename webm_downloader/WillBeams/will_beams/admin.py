@@ -4,9 +4,10 @@ from will_beams.models import Webm, Tag, WebmTag
 
 
 class WebmAdmin(admin.ModelAdmin):
-    fields = ['video', 'rating', 'nsfw']
+    fields = ['video', 'thumbnail', 'rating', 'nsfw']
     readonly = ['md5']
-    list_display = ['video', 'rating', 'md5', 'is_safe_for_work']
+    list_display = ['thumbnail_img', 'rating', 'md5', 'is_safe_for_work']
+    ordering = ['-rating']
 
 admin.site.register(Webm, WebmAdmin)
 admin.site.register(Tag)

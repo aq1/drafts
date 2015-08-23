@@ -2,10 +2,14 @@
 
 try:
     import urllib.request as request
-    import urllib.error.HTTPError as HTTPError
+    from urllib.error import HTTPError
 except ImportError:
     import urllib2 as request
     from urllib2 import HTTPError
+    import sys
+
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 import re
 import json
@@ -16,25 +20,24 @@ import multiprocessing
 
 import scraper_threads as scraper
 
-import sys
-
-reload(sys)
-sys.setdefaultencoding('utf8')
 
 BOARD_URL = 'https://2ch.pm/'
 CATALOG_URL = BOARD_URL + '{}/catalog.json'
 THREAD_URL = BOARD_URL + '{}/res/{}.json'
-QUERY = r'(webm | цуиь | шebm)'
+QUERY = r'(webm | цуиь | шebm, wbem)'
 WEBM = 6
 
 
 class AbstractDownloader(object):
 
     def _download(self):
-        raw_data = request.urlopen(self._get_download_url())
+        try:
+            raw_data = request.urlopen(self._get_download_url())
+        except HTTPError as err:
+            print('HTTP error with %s code' % err.code)
         json_data = raw_data.read().decode()
         self.data = json.loads(json_data)
-        self.pickle()
+        # self.pickle()
 
     def _unpickle(self):
         try:
@@ -80,6 +83,7 @@ class Catalog(AbstractDownloader):
                 self.threads.append(thread)
 
     def start_downloads(self):
+        print('Starting %s processes' % len(self.threads))
         for thread in self.threads:
             thread.find_webms()
             thread.start_download()
@@ -95,7 +99,8 @@ class Thread(AbstractDownloader):
         self.last_post_number = 0
         self.board = board
         self.data = {}
-        self.webms = []
+        self.webms = multiprocessing.Queue()
+        self.thumbnails = []
 
         if local:
             self.get_thread = self._unpickle
@@ -112,8 +117,10 @@ class Thread(AbstractDownloader):
         return THREAD_URL.format(self.board, self.number)
 
     def start_download(self):
-        multiprocessing.Process(
-            target=scraper.main, args=(self.webms,)).start()
+        proc = multiprocessing.Process(
+            target=scraper.main, args=(self.webms,))
+        proc.start()
+        # proc.join()
 
         self.wait_and_download()
 
@@ -125,8 +132,6 @@ class Thread(AbstractDownloader):
             self.wait_and_download()
             return
 
-        print('Downloading')
-
         for post in posts:
             try:
                 files = post['files']
@@ -135,19 +140,23 @@ class Thread(AbstractDownloader):
 
             for f in files:
                 if f['type'] == WEBM:
-                    fullpath = BOARD_URL + self.board + '/' + f['path']
-                    self.webms.append((fullpath, f['md5']))
+                    webm = BOARD_URL + self.board + '/' + f['path']
+                    thumbnail = BOARD_URL + self.board + '/' + f['thumbnail']
+                    self.webms.put((thumbnail, webm, f['md5']))
 
         self.last_post_number = posts[-1]['num']
 
-    def wait_and_download(self, seconds=1):
+    def wait_and_download(self, seconds=30):
+        print('Getting Thread in %s seconds' % seconds)
         time.sleep(seconds)
         try:
-            print('Downloading')
+            print('Downloading...')
             self.get_thread()
-        except HTTPError:
-            print('Got HTTPError, exiting')
-            exit()
+        except HTTPError as err:
+            if err.code == 404:
+                self.webms.put([None, None, None])
+                print(
+                    'Got HTTPError "%s", exiting. Finishing downloads.' % err)
         else:
             self.find_webms()
 
